@@ -12,8 +12,8 @@ load_dotenv(BACKEND_DIR / ".env")
 # --- Monad ---
 MONAD_RPC_URL = os.getenv("MONAD_RPC_URL", "https://testnet-rpc.monad.xyz")
 MONAD_CHAIN_ID = int(os.getenv("MONAD_CHAIN_ID", "10143"))
-EXPLORER_TX_BASE = "https://testnet.monadscan.com/tx/"
-EXPLORER_ADDR_BASE = "https://testnet.monadscan.com/address/"
+EXPLORER_TX_BASE = "https://testnet.monadexplorer.com/tx/"
+EXPLORER_ADDR_BASE = "https://testnet.monadexplorer.com/address/"
 
 CONTRACT_ADDRESS = os.getenv("AGENTMANDI_CONTRACT_ADDRESS", "").strip()
 
