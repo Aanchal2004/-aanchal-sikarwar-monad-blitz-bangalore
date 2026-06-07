@@ -40,3 +40,17 @@ MIN_BALANCE_WARN_MON = float(os.getenv("MIN_BALANCE_WARN_MON", "0.5"))
 DB_PATH = BACKEND_DIR / "agentmandi.db"
 WALLETS_PATH = BACKEND_DIR / "wallets.json"
 ABI_PATH = BACKEND_DIR / "app" / "contract_abi.json"
+
+# --- CORS (comma-separated origins; * = allow all) ---
+_cors_raw = os.getenv("CORS_ORIGINS", "*").strip()
+CORS_ORIGINS = ["*"] if _cors_raw == "*" else [o.strip() for o in _cors_raw.split(",") if o.strip()]
+
+
+def ensure_deploy_files() -> None:
+    """Write wallets.json / contract_abi.json from env when missing (Render/Vercel)."""
+    wallets_json = os.getenv("WALLETS_JSON", "").strip()
+    if wallets_json and not WALLETS_PATH.exists():
+        WALLETS_PATH.write_text(wallets_json, encoding="utf-8")
+    abi_json = os.getenv("CONTRACT_ABI_JSON", "").strip()
+    if abi_json and not ABI_PATH.exists():
+        ABI_PATH.write_text(abi_json, encoding="utf-8")

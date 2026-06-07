@@ -21,7 +21,7 @@ from .ws import bus
 app = FastAPI(title="AgentMandi", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -42,6 +42,7 @@ class AgentIn(BaseModel):
 
 @app.on_event("startup")
 def _startup() -> None:
+    config.ensure_deploy_files()
     init_db()
     load_agents()
     _preflight_check()

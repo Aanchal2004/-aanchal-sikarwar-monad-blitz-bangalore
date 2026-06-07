@@ -15,11 +15,13 @@ backend/wallets.json
 *.sqlite3
 
 # Build artifacts
-backend/app/contract_abi.json
 contracts/out/
 node_modules/
 frontend/.next/
 frontend/tsconfig.tsbuildinfo
+
+# ABI is safe to commit for deploy; keep local override optional
+# backend/app/contract_abi.json
 
 # IDE / OS
 .DS_Store

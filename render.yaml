@@ -1,0 +1,40 @@
+# Render Blueprint — AgentMandi backend
+# Dashboard: New > Blueprint > connect this repo, or create Web Service manually.
+#
+# After deploy, set secret env vars in Render dashboard (see DEPLOY.md):
+#   MANAGER_PRIVATE_KEY, MANAGER_ADDRESS, AGENTMANDI_CONTRACT_ADDRESS,
+#   SARVAM_API_KEY, WALLETS_JSON
+
+services:
+  - type: web
+    name: agentmandi-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: MONAD_RPC_URL
+        value: https://testnet-rpc.monad.xyz
+      - key: MONAD_CHAIN_ID
+        value: "10143"
+      - key: LLM_PROVIDER
+        value: sarvam
+      - key: SCRIPTED_RATINGS
+        value: "true"
+      - key: NARRATE_WITH_LLM
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: MANAGER_PRIVATE_KEY
+        sync: false
+      - key: MANAGER_ADDRESS
+        sync: false
+      - key: AGENTMANDI_CONTRACT_ADDRESS
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: WALLETS_JSON
+        sync: false
