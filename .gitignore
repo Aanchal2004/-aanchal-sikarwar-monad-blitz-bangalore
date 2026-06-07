@@ -1,0 +1,19 @@
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.env
+backend/.env
+
+# Secrets / wallets
+wallets.json
+backend/wallets.json
+
+# DB
+*.db
+*.sqlite3
+
+# Build artifacts
+backend/app/contract_abi.json
+contracts/out/
+node_modules/
