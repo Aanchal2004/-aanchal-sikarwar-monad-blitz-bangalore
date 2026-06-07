@@ -91,8 +91,16 @@ def get_run(run_id: int) -> dict:
         decisions = list(s.exec(select(Decision).where(Decision.subtask_id.in_(st_ids))).all()) if st_ids else []
         payments = list(s.exec(select(Payment).where(Payment.subtask_id.in_(st_ids))).all()) if st_ids else []
         ratings = list(s.exec(select(Rating).where(Rating.subtask_id.in_(st_ids))).all()) if st_ids else []
+        confirmed = [p for p in payments if p.status == "confirmed"]
+        summary = {
+            "total_spent_mon": round(sum(p.amount_mon for p in confirmed), 6),
+            "payments": len(payments),
+            "confirmed": len(confirmed),
+            "agents_hired": len({p.agent_id for p in payments}),
+        }
         return {
             "run": {"id": run.id, "prompt": run.prompt, "status": run.status, "final_result": run.final_result, "created_at": run.created_at},
+            "summary": summary,
             "subtasks": [{"id": st.id, "idx": st.idx, "description": st.description, "skill": st.skill, "status": st.status} for st in subtasks],
             "decisions": [{"subtask_id": d.subtask_id, "selected_agent_id": d.selected_agent_id, "utility": d.utility, "reasoning": d.reasoning, "candidates": __import__("json").loads(d.candidates_json)} for d in decisions],
             "payments": [{"subtask_id": p.subtask_id, "agent_id": p.agent_id, "amount_mon": p.amount_mon, "tx_hash": p.tx_hash, "block": p.block, "status": p.status, "explorer": (config.EXPLORER_TX_BASE + p.tx_hash) if p.tx_hash else ""} for p in payments],

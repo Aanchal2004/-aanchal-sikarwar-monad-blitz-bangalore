@@ -94,10 +94,28 @@ def main() -> None:
     print(f"Deploy tx: {config.EXPLORER_TX_BASE}{tx_hash.hex()}")
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
     addr = receipt.contractAddress
+    _write_env_address(addr)
     print("\n=== DEPLOYED ===")
-    print(f"AGENTMANDI_CONTRACT_ADDRESS = {addr}")
+    print(f"AGENTMANDI_CONTRACT_ADDRESS = {addr}  (written to backend/.env)")
     print(f"Explorer: {config.EXPLORER_ADDR_BASE}{addr}")
-    print("\nPaste that address into backend/.env then run scripts/register_agents.py")
+    print("\nNext: run scripts/register_agents.py")
+
+
+def _write_env_address(addr: str) -> None:
+    env_path = config.BACKEND_DIR / ".env"
+    if not env_path.exists():
+        return
+    lines = env_path.read_text().splitlines()
+    out, found = [], False
+    for ln in lines:
+        if ln.startswith("AGENTMANDI_CONTRACT_ADDRESS="):
+            out.append(f"AGENTMANDI_CONTRACT_ADDRESS={addr}")
+            found = True
+        else:
+            out.append(ln)
+    if not found:
+        out.append(f"AGENTMANDI_CONTRACT_ADDRESS={addr}")
+    env_path.write_text("\n".join(out) + "\n")
 
 
 if __name__ == "__main__":

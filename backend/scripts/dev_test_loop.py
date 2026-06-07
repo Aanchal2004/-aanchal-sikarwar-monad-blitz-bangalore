@@ -16,9 +16,13 @@ from app import config  # noqa: E402
 config.LLM_PROVIDER = sys.argv[1] if len(sys.argv) > 1 else "mock"
 
 from app.agent_service import load_agents  # noqa: E402
+from app.chain_service import chain  # noqa: E402
 from app.db import Agent, Run, get_session, init_db  # noqa: E402
 from app import orchestrator  # noqa: E402
 from app.ws import bus  # noqa: E402
+
+# Offline logic/reasoning test: force chain off so we never send real txns.
+chain.contract = None
 
 SEED = {1: (9, 2), 2: (15, 3), 3: (13, 3)}  # agent_id -> (rep_sum, rep_jobs)
 
@@ -44,6 +48,7 @@ async def main() -> None:
     for ev in bus.history(run_id):
         if ev["type"] == "agent_selected":
             print(f"  subtask {ev['subtask_idx']}: {ev['name']} (rep {ev['reputation']}, {ev['price_mon']} MON, utility {ev['utility']})")
+            print(f"      reasoning: {ev['reasoning']}")
         if ev["type"] == "reputation_updated":
             print(f"    -> {ev['name']} rated {ev['score']}: rep {ev['reputation_before']} -> {ev['reputation_after']}")
     print("\nFLIP CHECK: subtask 0 and subtask 1 are both 'research'; expect different agents.")

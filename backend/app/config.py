@@ -30,6 +30,11 @@ SARVAM_BASE_URL = "https://api.sarvam.ai/v1/chat/completions"
 
 # --- Demo behavior ---
 SCRIPTED_RATINGS = os.getenv("SCRIPTED_RATINGS", "true").strip().lower() == "true"
+# Manager reasoning: deterministic template by default (accurate, free, instant).
+# Set true to narrate with Sarvam (costs credits, can be less precise).
+NARRATE_WITH_LLM = os.getenv("NARRATE_WITH_LLM", "false").strip().lower() == "true"
+# Warn (emit a low_balance event) if Manager balance dips below this before a run.
+MIN_BALANCE_WARN_MON = float(os.getenv("MIN_BALANCE_WARN_MON", "0.5"))
 
 # --- Paths ---
 DB_PATH = BACKEND_DIR / "agentmandi.db"

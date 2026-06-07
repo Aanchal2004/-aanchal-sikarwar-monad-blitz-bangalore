@@ -27,9 +27,52 @@ def _scripted_score(idx: int) -> int:
     return 2 if idx == 0 else 5
 
 
+def _build_reasoning(chosen: dict, candidates: list[dict], prev_winner: dict | None) -> str:
+    """Deterministic, always-accurate manager reasoning that surfaces the
+    cost-vs-quality tradeoff and explicitly calls out a reputation-driven flip."""
+    others = [c for c in candidates if c["agent_id"] != chosen["agent_id"]]
+    cheapest = min(candidates, key=lambda c: c["price_mon"])
+    highest_rep = max(candidates, key=lambda c: c["reputation"])
+    bits: list[str] = []
+
+    # Flip note: previously preferred a different agent for this skill.
+    if prev_winner and prev_winner["agent_id"] != chosen["agent_id"]:
+        prev_now = next((c for c in candidates if c["agent_id"] == prev_winner["agent_id"]), prev_winner)
+        bits.append(
+            f"Previously hired {prev_now['name']}, but its reputation fell to "
+            f"{prev_now['reputation']:.2f} after a weak rating, so switching to {chosen['name']}."
+        )
+
+    if chosen["agent_id"] == highest_rep["agent_id"] and chosen["agent_id"] != cheapest["agent_id"]:
+        bits.append(
+            f"Paying a premium ({chosen['price_mon']} MON) for {chosen['name']}'s top reputation "
+            f"{chosen['reputation']:.2f} - quality wins here."
+        )
+    elif chosen["agent_id"] == cheapest["agent_id"] and others:
+        rival = highest_rep if highest_rep["agent_id"] != chosen["agent_id"] else others[0]
+        bits.append(
+            f"{chosen['name']} gives the best value: rep {chosen['reputation']:.2f} at just "
+            f"{chosen['price_mon']} MON vs {rival['name']} (rep {rival['reputation']:.2f} @ {rival['price_mon']} MON)."
+        )
+    else:
+        bits.append(
+            f"{chosen['name']} (rep {chosen['reputation']:.2f} @ {chosen['price_mon']} MON) "
+            f"has the highest utility score {chosen['utility']:.3f}."
+        )
+    return " ".join(bits)
+
+
 async def run_task(run_id: int, prompt: str) -> None:
     try:
         await bus.emit(run_id, "run_started", {"prompt": prompt})
+
+        if chain.is_ready():
+            try:
+                bal = await asyncio.to_thread(chain.balance_mon)
+                if bal < config.MIN_BALANCE_WARN_MON:
+                    await bus.emit(run_id, "low_balance", {"balance_mon": round(bal, 4)})
+            except Exception:
+                pass
 
         subtasks = await asyncio.to_thread(llm_service.decompose_task, prompt)
         st_info: list[dict] = []
@@ -43,8 +86,9 @@ async def run_task(run_id: int, prompt: str) -> None:
         await bus.emit(run_id, "decomposed", {"subtasks": [{"idx": r["idx"], "description": r["description"], "skill": r["skill"]} for r in st_info]})
 
         results: list[str] = []
+        last_winner_by_skill: dict[str, dict] = {}
         for st in st_info:
-            await _run_subtask(run_id, st, context="\n".join(results), results=results)
+            await _run_subtask(run_id, st, context="\n".join(results), results=results, last_winner_by_skill=last_winner_by_skill)
 
         final = "\n\n".join(results)
         with get_session() as s:
@@ -65,7 +109,7 @@ async def run_task(run_id: int, prompt: str) -> None:
         raise
 
 
-async def _run_subtask(run_id: int, st: dict, context: str, results: list[str]) -> None:
+async def _run_subtask(run_id: int, st: dict, context: str, results: list[str], last_winner_by_skill: dict) -> None:
     # 1. candidates + cost-vs-quality decision
     cands = candidates_for_skill(st["skill"])
     max_price = max((c.price_mon for c in cands), default=0.0)
@@ -80,7 +124,12 @@ async def _run_subtask(run_id: int, st: dict, context: str, results: list[str]) 
     chosen = candidates[0]
     await bus.emit(run_id, "candidates_evaluated", {"subtask_idx": st["idx"], "skill": st["skill"], "candidates": candidates})
 
-    reasoning = await asyncio.to_thread(llm_service.narrate_decision, st["description"], candidates, chosen)
+    prev_winner = last_winner_by_skill.get(st["skill"])
+    if config.NARRATE_WITH_LLM:
+        reasoning = await asyncio.to_thread(llm_service.narrate_decision, st["description"], candidates, chosen)
+    else:
+        reasoning = _build_reasoning(chosen, candidates, prev_winner)
+    last_winner_by_skill[st["skill"]] = chosen
     with get_session() as s:
         s.add(Decision(subtask_id=st["id"], candidates_json=json.dumps(candidates), selected_agent_id=chosen["agent_id"], utility=chosen["utility"], reasoning=reasoning))
         row2 = s.get(Subtask, st["id"])
