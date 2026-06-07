@@ -25,6 +25,7 @@ Both must use **HTTPS** so WebSockets work (`wss://`).
 
    | Key | Value |
    |-----|-------|
+   | `PYTHON_VERSION` | `3.12.8` |
    | `MANAGER_PRIVATE_KEY` | your manager private key |
    | `MANAGER_ADDRESS` | `0xa95c36aa4Cfd8C82daCC33788B09ba214bE1d358` |
    | `AGENTMANDI_CONTRACT_ADDRESS` | from `.env` |
