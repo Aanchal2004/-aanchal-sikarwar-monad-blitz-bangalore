@@ -26,6 +26,7 @@ def load_agents() -> list[Agent]:
             a.wallet = spec["address"]
             a.price_mon = spec["price_mon"]
             a.persona = spec.get("persona", "")
+            a.operator = spec.get("operator", "") or "Independent"
             s.add(a)
         s.commit()
     sync_reputation_from_chain()

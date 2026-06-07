@@ -20,11 +20,11 @@ from web3 import Web3  # noqa: E402
 from app import config  # noqa: E402
 
 # Seed ratings (score, count) per agent_id -> builds a believable starting history.
-# Bhavna (premium) starts highest, Asha (cheap) solid, Chetan (writer) good.
+# MarketScope (cheap) solid, CompEdge (premium) highest, BriefForge (writer) good.
 SEED_RATINGS = {
-    1: [(5, 1), (4, 1)],          # Asha  -> avg 4.50
-    2: [(5, 3)],                  # Bhavna -> avg 5.00
-    3: [(5, 1), (4, 1), (4, 1)],  # Chetan -> avg 4.33
+    1: [(5, 1), (4, 1)],          # MarketScope -> avg 4.50
+    2: [(5, 3)],                  # CompEdge    -> avg 5.00
+    3: [(5, 1), (4, 1), (4, 1)],  # BriefForge  -> avg 4.33
 }
 
 

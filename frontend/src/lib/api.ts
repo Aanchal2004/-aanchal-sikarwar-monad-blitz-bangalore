@@ -9,6 +9,7 @@ export interface Agent {
   reputation: number;
   jobs: number;
   persona: string;
+  operator: string;
   explorer: string;
 }
 
@@ -30,13 +31,16 @@ export interface HealthInfo {
 
 export type WsEvent =
   | { type: 'run_started'; run_id: number; prompt: string }
+  | { type: 'budget'; run_id: number; budget: number; spent: number; remaining: number }
+  | { type: 'budget_update'; run_id: number; budget: number; spent: number; remaining: number }
   | { type: 'decomposed'; run_id: number; subtasks: { idx: number; description: string; skill: string }[] }
   | { type: 'candidates_evaluated'; run_id: number; subtask_idx: number; skill: string; candidates: Candidate[] }
-  | { type: 'agent_selected'; run_id: number; subtask_idx: number; agent_id: number; name: string; price_mon: number; reputation: number; utility: number; reasoning: string }
+  | { type: 'agent_selected'; run_id: number; subtask_idx: number; agent_id: number; name: string; price_mon: number; reputation: number; utility: number; reasoning: string; decision_label?: string }
   | { type: 'payment_sent'; run_id: number; subtask_idx: number; agent_id: number; amount_mon: number }
-  | { type: 'payment_confirmed'; run_id: number; subtask_idx: number; agent_id: number; amount_mon: number; tx_hash: string; block: number; status: string; explorer: string }
+  | { type: 'payment_confirmed'; run_id: number; subtask_idx: number; agent_id: number; amount_mon: number; tx_hash: string; block: number; status: string; latency_ms?: number; explorer: string }
   | { type: 'work_received'; run_id: number; subtask_idx: number; agent_id: number; name: string; output: string }
   | { type: 'reputation_updated'; run_id: number; subtask_idx: number; agent_id: number; name: string; score: number; reputation_before: number; reputation_after: number; tx_hash: string; explorer: string }
+  | { type: 'subtask_skipped'; run_id: number; subtask_idx: number; reason: string; remaining: number }
   | { type: 'run_completed'; run_id: number; final_result: string }
   | { type: 'run_failed'; run_id: number; error: string }
   | { type: 'low_balance'; run_id: number; balance_mon: number };
@@ -51,12 +55,33 @@ export async function getAgents(): Promise<Agent[]> {
   return r.json();
 }
 
-export async function postTask(prompt: string): Promise<{ run_id: number }> {
+export async function postTask(prompt: string, budget_mon = 0.6): Promise<{ run_id: number }> {
   const r = await fetch(`${BACKEND}/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, budget_mon }),
   });
+  return r.json();
+}
+
+export interface AgentIn {
+  name: string;
+  skill: string;
+  price_mon: number;
+  persona?: string;
+  operator?: string;
+}
+
+export async function registerAgent(body: AgentIn): Promise<Agent> {
+  const r = await fetch(`${BACKEND}/agents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error(err.detail ?? 'Registration failed');
+  }
   return r.json();
 }
 

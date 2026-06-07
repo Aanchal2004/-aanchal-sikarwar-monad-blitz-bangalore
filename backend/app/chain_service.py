@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from typing import Optional
 
 from web3 import Web3
@@ -68,11 +69,14 @@ class ChainService:
                 tx["gas"] = 300_000
             signed = self.account.sign_transaction(tx)
             raw = signed.raw_transaction
+            t0 = time.monotonic()
             tx_hash, receipt = self._send_raw(raw)
+            latency_ms = int((time.monotonic() - t0) * 1000)
             return {
                 "tx_hash": tx_hash,
                 "block": int(receipt["blockNumber"]) if receipt else 0,
                 "status": "confirmed" if (receipt and receipt.get("status") == 1) else "sent",
+                "latency_ms": latency_ms,
             }
 
     def _send_raw(self, raw):

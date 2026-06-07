@@ -24,6 +24,7 @@ class Agent(SQLModel, table=True):
     wallet: str
     price_mon: float
     persona: str = ""
+    operator: str = ""  # who owns/operates this agent (signals Agent != Manager)
     rep_sum: int = 0
     rep_jobs: int = 0
 
@@ -35,6 +36,7 @@ class Agent(SQLModel, table=True):
 class Run(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     prompt: str
+    budget_mon: float = 0.0  # workforce budget the human allocated for this run
     status: str = "running"  # running | completed | failed
     final_result: str = ""
     created_at: str = Field(default_factory=_now)
@@ -46,7 +48,7 @@ class Subtask(SQLModel, table=True):
     idx: int
     description: str
     skill: str
-    status: str = "pending"  # pending | hiring | paid | working | rated | done
+    status: str = "pending"  # pending | hiring | paid | working | rated | done | skipped
 
 
 class Decision(SQLModel, table=True):
@@ -66,6 +68,7 @@ class Payment(SQLModel, table=True):
     tx_hash: str = ""
     block: int = 0
     status: str = "sent"  # sent | confirmed | failed
+    latency_ms: int = 0  # wall-clock to on-chain confirmation
 
 
 class Rating(SQLModel, table=True):

@@ -1,311 +1,132 @@
-# Monad Agent Hackathon Kit
+# AgentMandi
 
-**Ship AI agents + blockchain MVPs in one day.** A reusable starter repository for [Monad Blitz Bangalore](https://monad.xyz) — optimized for 6-8 hour hackathon sprints.
+**Workforce coordination for the AI agent economy — on Monad.**
 
-Build agent marketplaces, multi-agent systems, RAG apps, wallet agents, and on-chain reputation — fast.
+AgentMandi lets a human set a goal and budget; a Manager agent decomposes the work, hires specialist AI providers, pays them on-chain, rates their performance, and delivers an auditable result. Humans define objectives and review outputs; the system handles hire, pay, and reputation.
 
----
-
-## Project Structure
-
-```
-monad-agent-hackathon-kit/
-├── frontend/          # Next.js + TypeScript + Tailwind + shadcn-style UI
-├── backend/           # FastAPI + LangChain/LangGraph hooks
-├── agents/            # Multi-agent framework (Planner → Executor pipeline)
-├── prompts/           # Reusable system prompts for each agent
-├── docs/              # Cheat sheets (FastAPI, LangChain, RAG, MCP, etc.)
-├── datasets/          # Sample docs for RAG ingestion
-├── scripts/           # Startup and health-check scripts
-├── monad/             # Blockchain notes (wallets, txs, contracts)
-├── pitch/             # Demo script, elevator pitch, submission template
-├── examples/          # Hackathon idea templates with architecture
-├── deployments/       # Vercel, Render, Railway, Docker guides
-├── tests/             # API smoke tests
-├── .env.example       # Environment variable template
-├── docker-compose.yml
-├── Makefile
-└── README.md
-```
+Built for **Monad Blitz Bangalore**.
 
 ---
 
-## Quick Start
+## Why not ChatGPT?
+
+| ChatGPT | AgentMandi |
+|---------|------------|
+| One model, one session | Multiple specialist providers per task |
+| No payment or audit trail | Per-subtask payments on Monad testnet |
+| No persistent reputation | On-chain reputation changes future hiring |
+| No budget constraints | Workforce budget with cost vs. quality trade-offs |
+| No run receipt | Full audit trail with tx hashes |
+
+---
+
+## Demo prompt
+
+```
+Analyze whether we should launch a B2B SaaS product for Indian D2C brands
+(social commerce analytics). I need: (1) market size and key players,
+(2) competitor positioning vs tools like Bikayi and Shopify, and
+(3) a one-page go/no-go executive brief with risks and next steps.
+```
+
+**Budget:** `0.60 MON`
+
+**Workforce:** MarketScope AI · CompEdge AI · BriefForge AI · StackLens AI
+
+---
+
+## Architecture
+
+```
+Human (goal + budget)
+    → Manager Agent (decompose + hire + pay + rate)
+        → Specialist Agents (research / writing)
+            → AgentMandi.sol on Monad (registry, payments, reputation)
+    → Run Receipt (audit trail + final deliverable)
+```
+
+- **Frontend:** Next.js 15, TypeScript, Tailwind — Operations Console, Agent Registry, Run Receipt
+- **Backend:** FastAPI, WebSocket live events, SQLite mirror, Sarvam AI
+- **Chain:** Monad testnet — `AgentMandi.sol` (register, pay, rate)
+- **LLM:** Sarvam (`sarvam-105b` decompose, `sarvam-30b` work)
+
+---
+
+## Quick start
 
 ### Prerequisites
 
-- **Node.js** 20+
-- **Python** 3.11+
-- **npm** or **pnpm**
-- At least one LLM API key (optional — mock mode works without keys)
+- Python 3.11+
+- Node.js 20+
+- Monad testnet MON on Manager wallet ([faucet](https://testnet.monad.xyz))
+- Sarvam API key ([dashboard](https://dashboard.sarvam.ai))
 
-### 1. Setup
+### Setup
 
-```bash
-# Clone / enter project
-cd "monad hackathon"
-
-# Copy environment file
-copy .env.example .env        # Windows
-# cp .env.example .env        # macOS/Linux
-
-# Install dependencies
-make install
-# Or manually:
-# cd backend && pip install -r requirements.txt
-# cd frontend && npm install
-```
-
-### 2. Configure Environment
-
-Edit `.env` and set at minimum:
-
-```env
-LLM_PROVIDER=openai          # openai | anthropic | openrouter
-OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY / OPENROUTER_API_KEY
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-### 3. Run
-
-**Windows (PowerShell):**
 ```powershell
-.\scripts\start.ps1
+cd backend
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt
+copy .env.example .env
+# Fill: MANAGER_PRIVATE_KEY, MANAGER_ADDRESS, AGENTMANDI_CONTRACT_ADDRESS, SARVAM_API_KEY
+python scripts/gen_wallets.py
+python scripts/reset_demo.py
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-**Two terminals:**
-```bash
-make backend    # http://localhost:8000
-make frontend   # http://localhost:3000
-```
-
-**Docker:**
-```bash
-docker compose up --build
-```
-
-### 4. Verify
-
-| URL | Description |
-|-----|-------------|
-| http://localhost:3000 | Frontend landing page |
-| http://localhost:8000/docs | FastAPI Swagger UI |
-| http://localhost:3000/demo | Multi-agent workflow demo |
-
----
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLM_PROVIDER` | `openai`, `anthropic`, or `openrouter` | `openai` |
-| `LLM_MODEL` | Model name | `gpt-4o-mini` |
-| `OPENAI_API_KEY` | OpenAI API key | — |
-| `ANTHROPIC_API_KEY` | Anthropic API key | — |
-| `OPENROUTER_API_KEY` | OpenRouter API key | — |
-| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` |
-| `MONAD_RPC_URL` | Monad testnet RPC | `https://testnet-rpc.monad.xyz` |
-| `MONAD_CHAIN_ID` | Chain ID | `10143` |
-| `AGENT_WALLET_PRIVATE_KEY` | Agent wallet (testnet only!) | — |
-
-See `.env.example` for the full list.
-
----
-
-## Frontend
-
-**Stack:** Next.js 15, TypeScript, TailwindCSS, shadcn-style components
-
-### Pages
-
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page |
-| `/dashboard` | Stats, wallet, quick actions |
-| `/chat` | Chat interface → `POST /chat` |
-| `/marketplace` | Agent marketplace grid |
-| `/agents/[id]` | Agent profile + chat |
-| `/demo` | Live multi-agent workflow |
-
-### Components
-
-`ChatInterface`, `AgentCard`, `WalletCard`, `ReputationBadge`, `LoadingSpinner`, `Navbar`, `Sidebar`, `DemoPanel`
-
-```bash
+```powershell
 cd frontend
-npm run dev      # Development
-npm run build    # Production build
+npm install
+# Create .env.local: NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+npm run dev
+```
+
+Open **http://localhost:3000/console**
+
+Full demo script: [`backend/DEMO_RUNBOOK.md`](backend/DEMO_RUNBOOK.md)
+
+---
+
+## Project structure
+
+```
+├── backend/           # FastAPI + orchestrator + chain service
+│   ├── app/           # main.py, orchestrator.py, chain_service.py, llm_service.py
+│   └── scripts/       # deploy, register_agents, reset_demo, gen_wallets
+├── frontend/          # Next.js operations console
+│   └── src/app/       # console, agents, runs/[id]
+├── contracts/         # AgentMandi.sol
+└── backend/DEMO_RUNBOOK.md
 ```
 
 ---
 
-## Backend
+## Key features
 
-**Stack:** FastAPI, Pydantic, LangChain/LangGraph (hooks), OpenAI/Anthropic/OpenRouter
-
-### API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check + provider info |
-| POST | `/chat` | Chat with LLM |
-| POST | `/agent/run` | Run single agent |
-| POST | `/agent/workflow` | Full multi-agent pipeline |
-| POST | `/rag/query` | RAG question answering |
-
-### Example Requests
-
-```bash
-# Chat
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"messages":[{"role":"user","content":"Hello"}]}'
-
-# Run workflow
-curl -X POST http://localhost:8000/agent/workflow \
-  -H "Content-Type: application/json" \
-  -d '{"query":"Build an agent marketplace on Monad"}'
-
-# RAG query
-curl -X POST http://localhost:8000/rag/query \
-  -H "Content-Type: application/json" \
-  -d '{"question":"What is Monad?"}'
-```
-
-```bash
-cd backend
-uvicorn app:app --reload --port 8000
-```
+- Task decomposition into subtasks with capability-matched hiring
+- Cost vs. quality vs. budget optimization with human-readable decision reasons
+- On-chain micropayments and reputation (Monad sub-second settlement)
+- Reputation-driven hiring flips (visible in UI)
+- Agent registry with bring-your-own-provider registration
+- Human oversight framing — automation, not autonomy
 
 ---
 
-## Agent Workflow
+## Environment variables
 
-```
-User Query
-    ↓
-Planner Agent      → decomposes goal into steps
-    ↓
-Researcher Agent   → gathers context (RAG-ready)
-    ↓
-Critic Agent       → quality review + approval
-    ↓
-Executor Agent     → final deliverable
-    ↓
-Final Output
-```
+See [`backend/.env.example`](backend/.env.example). Never commit `.env`, `wallets.json`, or private keys.
 
-**Files:** `agents/workflow.py`, `agents/planner_agent.py`, etc.
-
-**Upgrade to LangGraph:** See `agents/workflow.py` → `build_langgraph_workflow()` and `docs/langgraph_cheatsheet.md`.
+| Variable | Description |
+|----------|-------------|
+| `MANAGER_PRIVATE_KEY` | Manager EOA (contract owner, tx sender) |
+| `AGENTMANDI_CONTRACT_ADDRESS` | Deployed contract on Monad testnet |
+| `SARVAM_API_KEY` | Sarvam AI API key |
+| `NEXT_PUBLIC_BACKEND_URL` | Backend URL for frontend (e.g. `http://localhost:8000`) |
 
 ---
 
-## RAG Workflow
+## Team
 
-```
-Documents (datasets/) → Load → Chunk → Embed → Store → Retrieve → Generate
-```
+Aanchal Sikarwar — Monad Blitz Bangalore submission
 
-**Implementation:** `backend/services/rag_service.py`
-
-Add your docs to `datasets/` and restart the backend (auto-indexes on startup).
-
----
-
-## Model Provider Abstraction
-
-Switch LLM provider via environment variable — no code changes:
-
-```env
-LLM_PROVIDER=openai       # Uses OpenAI SDK
-LLM_PROVIDER=anthropic    # Uses Anthropic SDK
-LLM_PROVIDER=openrouter   # Uses OpenAI-compatible OpenRouter API
-```
-
-**Implementation:** `backend/services/llm_provider.py`
-
-Without API keys, all endpoints return helpful mock responses so you can demo UI immediately.
-
----
-
-## Monad Integration Points
-
-| Component | Location |
-|-----------|----------|
-| Wallet agent | `agents/wallet_agent.py` |
-| Wallet UI | `frontend/src/components/WalletCard.tsx` |
-| Config | `backend/config/settings.py` |
-| Wallet examples | `monad/wallet_examples.md` |
-| Transaction examples | `monad/transaction_examples.md` |
-| Smart contract sketches | `monad/smart_contract_notes.md` |
-| Resources | `monad/monad_resources.md` |
-
----
-
-## Hackathon Ideas
-
-Pre-written templates in `examples/`:
-
-- **Agent Marketplace** — discover, pay, rate agents on-chain
-- **Autonomous Freelancer** — multi-agent job completion + payment
-- **Agent Reputation System** — on-chain trust scores
-- **AI Wallet Assistant** — natural language → Monad transactions
-- **Multi-Agent Network** — visible pipeline demo (fastest to ship)
-
-Each includes problem, solution, architecture, demo plan, and judge pitch.
-
----
-
-## Deployment
-
-| Platform | Guide |
-|----------|-------|
-| Vercel (frontend) | `deployments/vercel.md` |
-| Render (backend) | `deployments/render.md` |
-| Railway (full stack) | `deployments/railway.md` |
-| Docker | `deployments/docker.md` |
-
-**Recommended hackathon stack:** Railway (backend) + Vercel (frontend)
-
----
-
-## Testing
-
-```bash
-cd backend
-pip install -r ../tests/requirements.txt
-python -m pytest ../tests/ -v
-```
-
----
-
-## Documentation
-
-| Cheat Sheet | Topic |
-|-------------|-------|
-| `docs/fastapi_cheatsheet.md` | FastAPI patterns |
-| `docs/langchain_cheatsheet.md` | LangChain RAG + chains |
-| `docs/langgraph_cheatsheet.md` | Multi-agent graphs |
-| `docs/rag_cheatsheet.md` | RAG pipeline |
-| `docs/mcp_cheatsheet.md` | Model Context Protocol |
-| `docs/prompt_engineering_cheatsheet.md` | Prompt tips |
-| `docs/hackathon_workflow_guide.md` | Hour-by-hour plan |
-
----
-
-## Pitch Materials
-
-- `pitch/elevator_pitch.md` — 30-second pitch
-- `pitch/demo_script.md` — 5-minute live demo script
-- `pitch/architecture_slide.md` — presentation diagram
-- `pitch/judging_checklist.md` — pre-submission checklist
-- `pitch/final_submission_template.md` — submission form
-
----
-
-## License
-
-MIT — use freely for hackathons and learning.
-
-**Good luck at Monad Blitz Bangalore! 🚀**
+**Repo:** [github.com/Aanchal2004/-aanchal-sikarwar-monad-blitz-bangalore](https://github.com/Aanchal2004/-aanchal-sikarwar-monad-blitz-bangalore)

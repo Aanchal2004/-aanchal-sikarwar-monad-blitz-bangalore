@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 .env
 backend/.env
+frontend/.env.local
 
 # Secrets / wallets
 wallets.json
@@ -17,3 +18,9 @@ backend/wallets.json
 backend/app/contract_abi.json
 contracts/out/
 node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+
+# IDE / OS
+.DS_Store
+*.log
