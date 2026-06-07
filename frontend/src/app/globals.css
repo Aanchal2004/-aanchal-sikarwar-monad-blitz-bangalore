@@ -6,40 +6,38 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 262 60% 45%;
-    --accent-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 262 83% 58%;
-    --radius: 0.625rem;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 8%;
+    --primary: 238 76% 46%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 20%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 238 76% 46%;
+    --accent-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 238 76% 46%;
+    --radius: 0.5rem;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-white text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
+  .mono { font-family: 'Menlo', 'Consolas', monospace; }
 }
 
 @layer utilities {
-  .gradient-text {
-    @apply bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent;
-  }
-  .glass {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50;
-  }
+  .pill-green  { @apply inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700; }
+  .pill-blue   { @apply inline-flex items-center gap-1 rounded-full bg-blue-50  px-2 py-0.5 text-xs font-medium text-blue-700; }
+  .pill-gray   { @apply inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600; }
+  .pill-amber  { @apply inline-flex items-center gap-1 rounded-full bg-amber-50  px-2 py-0.5 text-xs font-medium text-amber-700; }
+  .dot-live    { @apply inline-block h-1.5 w-1.5 rounded-full bg-green-500; }
 }

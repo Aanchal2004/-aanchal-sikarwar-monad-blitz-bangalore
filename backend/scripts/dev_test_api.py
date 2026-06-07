@@ -42,7 +42,11 @@ async def main() -> None:
 
     async with httpx.AsyncClient(timeout=30) as c:
         snap = (await c.get(f"{BASE}/runs/{run_id}")).json()
-        print("SNAPSHOT subtasks:", len(snap["subtasks"]), "payments:", len(snap["payments"]), "ratings:", len(snap["ratings"]))
+        print("\nRECEIPT:", snap.get("summary"))
+        print("PAYMENT TX LINKS:")
+        for p in snap["payments"]:
+            print("  ", p["explorer"] or "(skipped)")
+        print("\nFINAL RESULT:\n" + snap["run"]["final_result"][:1200])
 
 
 if __name__ == "__main__":

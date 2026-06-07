@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "/_not-found",
-  "/dashboard/page": "/dashboard",
-  "/chat/page": "/chat",
-  "/demo/page": "/demo",
-  "/agents/[id]/page": "/agents/[id]",
-  "/page": "/",
-  "/marketplace/page": "/marketplace"
-}

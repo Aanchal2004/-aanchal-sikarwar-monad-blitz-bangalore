@@ -1,9 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/chat/page": "app/chat/page.js",
-  "/demo/page": "app/demo/page.js",
-  "/agents/[id]/page": "app/agents/[id]/page.js",
   "/page": "app/page.js",
-  "/marketplace/page": "app/marketplace/page.js"
+  "/console/page": "app/console/page.js"
 }
